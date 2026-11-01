@@ -27,4 +27,10 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.from(user));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<UserResponse> deactivateUser(@PathVariable Long id) {
+        User user = userService.deactivateUser(id);
+        return ResponseEntity.ok(UserResponse.from(user));
+    }
 }
