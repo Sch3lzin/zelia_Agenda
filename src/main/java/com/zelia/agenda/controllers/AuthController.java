@@ -1,6 +1,6 @@
 package com.zelia.agenda.controllers;
 
-import com.zelia.agenda.domain.user.LoginRequest;
+import com.zelia.agenda.domain.user.dto.LoginRequestDTO;
 import com.zelia.agenda.domain.user.User;
 import com.zelia.agenda.domain.user.UserRepository;
 import com.zelia.agenda.infra.security.jwt.TokenResponse;
@@ -31,14 +31,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequestDTO request) {
         User user = userRepository.findByEmail(request.email())
                 .orElse(null);
 
         if (user == null
                 || !user.getActive()
                 || !passwordEncoder.matches(request.password(), user.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email ou Senha invalidos");
         }
 
         String token = tokenService.gerarToken(user.getEmail(), user.getUserType().name());
