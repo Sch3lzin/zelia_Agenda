@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -17,9 +18,13 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(409, ex.getMessage(), Instant.now()));
     }
 
-    @ExceptionHandler(UserAlreadyInactiveException.class)
-    public ResponseEntity<String> handleAlreadyInactive(UserAlreadyInactiveException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    @ExceptionHandler(UserInactiveException.class)
+    public ResponseEntity<Map<String, Object>> handleUserInactive(UserInactiveException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of(
+                        "erro", "UserInactiveException",
+                        "mensagem", e.getMessage(),
+                        "id", e.getUserId()));
     }
 
     @ExceptionHandler(EntityNotFoundException.class)

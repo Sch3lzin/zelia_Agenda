@@ -4,7 +4,7 @@ import com.zelia.agenda.domain.user.User;
 import com.zelia.agenda.domain.user.UserRepository;
 import com.zelia.agenda.domain.user.dto.CreateUserDTO;
 import com.zelia.agenda.exceptions.RegisteredEmailException;
-import com.zelia.agenda.exceptions.UserAlreadyInactiveException;
+import com.zelia.agenda.exceptions.UserInactiveException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,7 +41,7 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuario não encontrado: " + id));
 
         if (!user.getActive()) {
-            throw new UserAlreadyInactiveException(id);
+            throw new UserInactiveException(id);
         }
 
         user.setActive(false);
