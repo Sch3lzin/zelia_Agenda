@@ -1,34 +1,54 @@
 package com.zelia.agenda.exceptions;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(RegisteredEmailException.class)
-    public ResponseEntity<ErrorResponse> registeredEmailException(RegisteredEmailException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ErrorResponse(409, ex.getMessage(), Instant.now()));
+    public ResponseEntity<ErrorResponse> handleRegisteredEmail(RegisteredEmailException ex) {
+        return error(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(UserInactiveException.class)
-    public ResponseEntity<Map<String, Object>> handleUserInactive(UserInactiveException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(Map.of(
-                        "erro", "UserInactiveException",
-                        "mensagem", e.getMessage(),
-                        "id", e.getUserId()));
+    public ResponseEntity<ErrorResponse> handleUserInactive(UserInactiveException ex) {
+        return error(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> handleNotFound(EntityNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    public ResponseEntity<ErrorResponse> handleNotFound(EntityNotFoundException ex) {
+        return error(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.warn("Violação de integridade de dados", ex);
+        return error(HttpStatus.CONFLICT, "Já existe um usuário com este e-mail.");
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
+        String campos = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        return error(HttpStatus.BAD_REQUEST, campos);
+    }
+
+    private ResponseEntity<ErrorResponse> error(HttpStatus status, String mensagem) {
+        return ResponseEntity.status(status)
+                .body(new ErrorResponse(status.value(), mensagem, Instant.now()));
     }
 }
