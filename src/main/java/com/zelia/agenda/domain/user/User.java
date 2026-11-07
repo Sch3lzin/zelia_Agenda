@@ -42,4 +42,11 @@ public class User {
         this.userType = userType;
         this.active = active;
     }
+
+    public User update(@NotBlank String name, @NotBlank String email, @NotNull UserType userType) {
+        this.name = name;
+        this.email = email;
+        this.userType = userType;
+        return this;
+    }
 }

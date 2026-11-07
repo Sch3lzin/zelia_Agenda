@@ -2,9 +2,9 @@ package com.zelia.agenda.controllers;
 
 import com.zelia.agenda.domain.user.User;
 import com.zelia.agenda.domain.user.dto.CreateUserDTO;
+import com.zelia.agenda.domain.user.dto.UpdateUserDTO;
 import com.zelia.agenda.domain.user.dto.UserResponse;
 import com.zelia.agenda.service.UserService;
-import com.zelia.agenda.service.VerificantionService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +24,6 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@RequestBody @Valid CreateUserDTO dto) {
-
         User user = userService.createUser(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.from(user));
     }
@@ -33,6 +32,13 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<UserResponse> deactivateUser(@PathVariable Long id) {
         User user = userService.deactivateUser(id);
+        return ResponseEntity.ok(UserResponse.from(user));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody @Valid UpdateUserDTO dto) {
+        User user = userService.updateUser(id, dto);
         return ResponseEntity.ok(UserResponse.from(user));
     }
 }

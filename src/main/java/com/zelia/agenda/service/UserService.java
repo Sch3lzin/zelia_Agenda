@@ -3,6 +3,7 @@ package com.zelia.agenda.service;
 import com.zelia.agenda.domain.user.User;
 import com.zelia.agenda.domain.user.UserRepository;
 import com.zelia.agenda.domain.user.dto.CreateUserDTO;
+import com.zelia.agenda.domain.user.dto.UpdateUserDTO;
 import com.zelia.agenda.exceptions.RegisteredEmailException;
 import com.zelia.agenda.exceptions.UserInactiveException;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,7 +23,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User createUser(@Valid CreateUserDTO dto) {
+    public User createUser(CreateUserDTO dto) {
         if (userRepository.findByEmail(dto.email()).isPresent()) {
             throw new RegisteredEmailException(dto.email());
         }
@@ -45,6 +46,23 @@ public class UserService {
         }
 
         user.setActive(false);
+        return userRepository.save(user);
+    }
+
+    public User updateUser(Long id, UpdateUserDTO dto) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario não encontrado: " + id));
+
+        if (!user.getActive()) {
+            throw new UserInactiveException(id);
+        }
+
+        if (!user.getEmail().equals(dto.email())
+                && userRepository.findByEmail(dto.email()).isPresent()) {
+            throw new RegisteredEmailException(dto.email());
+        }
+
+        user.update(dto.name(), dto.email(), dto.userType());
         return userRepository.save(user);
     }
 }
