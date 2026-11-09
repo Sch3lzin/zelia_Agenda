@@ -34,6 +34,11 @@ public class User {
     @Column(nullable = false)
     private UserType userType;
 
+    private String token;
+
+    @Column(name = "expiration_token")
+    private LocalDateTime expirationToken;
+
     @Column(nullable = false)
     private Boolean active;
 

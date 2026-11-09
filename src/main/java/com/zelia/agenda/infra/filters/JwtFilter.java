@@ -59,7 +59,7 @@ public class JwtFilter extends OncePerRequestFilter {
             String email = jwt.getSubject();
             String role = jwt.getClaim("role").asString();
 
-            User user = userRepository.findByEmail(email).orElse(null);
+            User user = userRepository.findByEmailIgnoreCase(email).orElse(null);
 
             if (user != null && !user.getActive()) {
                 response.setStatus(HttpStatus.CONFLICT.value());

@@ -1,9 +1,7 @@
 package com.zelia.agenda.controllers;
 
 import com.zelia.agenda.domain.user.User;
-import com.zelia.agenda.domain.user.dto.CreateUserDTO;
-import com.zelia.agenda.domain.user.dto.UpdateUserDTO;
-import com.zelia.agenda.domain.user.dto.UserResponse;
+import com.zelia.agenda.domain.user.dto.*;
 import com.zelia.agenda.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -34,6 +32,18 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.from(user));
     }
 
+    @PostMapping("/forgot-my-password")
+    public ResponseEntity<Void> forgotMyPassword(@RequestBody @Valid ForgotPasswordDTO dto) {
+        userService.sendToken(dto);
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/recovery-account")
+    public ResponseEntity<Void> recoveryAccount(@RequestBody @Valid ResetPasswordDTO dto) {
+        userService.resetPassword(dto);
+        return ResponseEntity.noContent().build();
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody @Valid UpdateUserDTO dto) {
@@ -42,7 +52,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
+    @PatchMapping("/reactive/{id}")
     public ResponseEntity<UserResponse> reactiveUser(@PathVariable Long id) {
         User user = userService.reactiveUser(id);
         return ResponseEntity.ok(UserResponse.from(user));

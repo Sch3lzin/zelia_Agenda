@@ -24,7 +24,7 @@ public class AdminInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (userRepository.findByEmail(adminEmail).isPresent()) {
+        if (userRepository.findByEmailIgnoreCase(adminEmail).isPresent()) {
             return;
         }
 
