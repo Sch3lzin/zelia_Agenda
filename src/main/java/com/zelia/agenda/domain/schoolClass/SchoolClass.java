@@ -17,4 +17,8 @@ public class SchoolClass {
     private Long id;
     @Column(nullable = false)
     private String name;
+
+    public SchoolClass(String name) {
+        this.name = name;
+    }
 }

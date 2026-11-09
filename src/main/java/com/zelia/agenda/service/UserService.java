@@ -22,6 +22,7 @@ import java.util.Base64;
 import java.util.HexFormat;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -38,6 +39,10 @@ public class UserService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findByActiveTrue();
     }
 
     public User getUser(Long id) {
@@ -108,7 +113,7 @@ public class UserService {
                     user.setExpirationToken(LocalDateTime.now().plus(TOKEN_VALIDITY));
                     userRepository.save(user);
 
-                    emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), token); // e-mail: o token original
+                    emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), token);
                 });
     }
 

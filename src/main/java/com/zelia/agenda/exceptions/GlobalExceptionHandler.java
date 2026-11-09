@@ -54,6 +54,11 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", e.getMessage()));
     }
 
+    @ExceptionHandler(ClassAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleClassAlreadyExists(ClassAlreadyExistsException ex) {
+        return error(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleUnexpected(Exception e) {
         log.error("Unexpected error", e);

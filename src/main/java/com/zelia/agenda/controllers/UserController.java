@@ -1,5 +1,6 @@
 package com.zelia.agenda.controllers;
 
+import com.zelia.agenda.domain.schoolClass.dto.SchoolClassResponse;
 import com.zelia.agenda.domain.user.User;
 import com.zelia.agenda.domain.user.dto.*;
 import com.zelia.agenda.service.UserService;
@@ -9,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -17,6 +20,16 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = userService.getAllUsers()
+                .stream()
+                .map(UserResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")

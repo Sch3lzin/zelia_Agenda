@@ -109,7 +109,7 @@ public class EmailService {
                       <tr>
                         <td style="background-color:#fafafa;padding:16px 28px;font-size:13px;
                                    color:#888888;text-align:center;">
-                          Obrigado,<br>Clínica Voll Med.
+                          Obrigado,<br>Grupo Escolar Zélia Milles.
                         </td>
                       </tr>
                     </table>
