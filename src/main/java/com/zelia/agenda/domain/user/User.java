@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jspecify.annotations.Nullable;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -31,6 +33,11 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserType userType;
+
+    private String token;
+
+    @Column(name = "expiration_token")
+    private LocalDateTime expirationToken;
 
     @Column(nullable = false)
     private Boolean active;
