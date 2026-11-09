@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jspecify.annotations.Nullable;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 @Getter

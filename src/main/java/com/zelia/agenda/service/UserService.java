@@ -23,6 +23,13 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    public User getUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario não encontrado: " + id));
+
+        return user;
+    }
+
     public User createUser(CreateUserDTO dto) {
         if (userRepository.findByEmail(dto.email()).isPresent()) {
             throw new RegisteredEmailException(dto.email());
@@ -34,18 +41,6 @@ public class UserService {
                 dto.userType(),
                 true);
 
-        return userRepository.save(user);
-    }
-
-    public User deactivateUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario não encontrado: " + id));
-
-        if (!user.getActive()) {
-            throw new UserInactiveException(id);
-        }
-
-        user.setActive(false);
         return userRepository.save(user);
     }
 
@@ -63,6 +58,26 @@ public class UserService {
         }
 
         user.update(dto.name(), dto.email(), dto.userType());
+        return userRepository.save(user);
+    }
+
+    public User reactiveUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario não encontrado: " + id));
+
+        user.setActive(true);
+        return userRepository.save(user);
+    }
+
+    public User deactivateUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario não encontrado: " + id));
+
+        if (!user.getActive()) {
+            throw new UserInactiveException(id);
+        }
+
+        user.setActive(false);
         return userRepository.save(user);
     }
 }

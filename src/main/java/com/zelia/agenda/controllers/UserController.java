@@ -21,6 +21,12 @@ public class UserController {
         this.userService = userService;
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
+        User user = userService.getUser(id);
+        return ResponseEntity.ok(UserResponse.from(user));
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@RequestBody @Valid CreateUserDTO dto) {
@@ -29,16 +35,23 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<UserResponse> deactivateUser(@PathVariable Long id) {
-        User user = userService.deactivateUser(id);
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody @Valid UpdateUserDTO dto) {
+        User user = userService.updateUser(id, dto);
         return ResponseEntity.ok(UserResponse.from(user));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody @Valid UpdateUserDTO dto) {
-        User user = userService.updateUser(id, dto);
+    public ResponseEntity<UserResponse> reactiveUser(@PathVariable Long id) {
+        User user = userService.reactiveUser(id);
+        return ResponseEntity.ok(UserResponse.from(user));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<UserResponse> deactivateUser(@PathVariable Long id) {
+        User user = userService.deactivateUser(id);
         return ResponseEntity.ok(UserResponse.from(user));
     }
 }
