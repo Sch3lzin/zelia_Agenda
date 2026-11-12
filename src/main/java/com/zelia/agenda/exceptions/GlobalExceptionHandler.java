@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -29,6 +28,16 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    @ExceptionHandler(ClassAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleClassAlreadyExists(ClassAlreadyExistsException ex) {
+        return error(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(AgendaAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleAgendaAlreadyExists(AgendaAlreadyExistsException ex) {
+        return error(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(EntityNotFoundException ex) {
         return error(HttpStatus.NOT_FOUND, ex.getMessage());
@@ -36,39 +45,31 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
-        log.warn("Violação de integridade de dados", ex);
-        return error(HttpStatus.CONFLICT, "Já existe um usuário com este e-mail.");
+        log.warn("Data integrity violation", ex);
+        return error(HttpStatus.CONFLICT, "Duplicate or invalid data.");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
-        String campos = ex.getBindingResult().getFieldErrors().stream()
+        String fields = ex.getBindingResult().getFieldErrors().stream()
                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .collect(Collectors.joining("; "));
-        return error(HttpStatus.BAD_REQUEST, campos);
+        return error(HttpStatus.BAD_REQUEST, fields);
     }
 
     @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<Map<String, String>> handleInvalidToken(InvalidTokenException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
-    }
-
-    @ExceptionHandler(ClassAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleClassAlreadyExists(ClassAlreadyExistsException ex) {
-        return error(HttpStatus.CONFLICT, ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleInvalidToken(InvalidTokenException ex) {
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleUnexpected(Exception e) {
-        log.error("Unexpected error", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Internal server error"));
+    public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
+        log.error("Unexpected error", ex);
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
     }
 
-
-    private ResponseEntity<ErrorResponse> error(HttpStatus status, String mensagem) {
+    private ResponseEntity<ErrorResponse> error(HttpStatus status, String message) {
         return ResponseEntity.status(status)
-                .body(new ErrorResponse(status.value(), mensagem, Instant.now()));
+                .body(new ErrorResponse(status.value(), message, Instant.now()));
     }
 }

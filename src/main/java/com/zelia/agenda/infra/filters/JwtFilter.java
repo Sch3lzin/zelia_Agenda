@@ -61,7 +61,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
             User user = userRepository.findByEmailIgnoreCase(email).orElse(null);
 
-            if (user != null && !user.getActive()) {
+            if (user == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if (!user.getActive()) {
                 response.setStatus(HttpStatus.CONFLICT.value());
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 response.setCharacterEncoding("UTF-8");
@@ -72,8 +77,9 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
 
+
             var auth = new UsernamePasswordAuthenticationToken(
-                    email, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
+                    user.getId() , null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
             SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
