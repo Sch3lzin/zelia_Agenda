@@ -4,6 +4,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.zelia.agenda.domain.user.User;
 import com.zelia.agenda.domain.user.UserRepository;
+import com.zelia.agenda.exceptions.ErrorResponse;
 import com.zelia.agenda.infra.security.jwt.TokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,8 +21,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -45,44 +46,44 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String header = request.getHeader("Authorization");
 
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-
-            DecodedJWT jwt;
-            try {
-                jwt = tokenService.validarToken(token);
-            } catch (JWTVerificationException e) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            String email = jwt.getSubject();
-            String role = jwt.getClaim("role").asString();
-
-            User user = userRepository.findByEmailIgnoreCase(email).orElse(null);
-
-            if (user == null) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            if (!user.getActive()) {
-                response.setStatus(HttpStatus.CONFLICT.value());
-                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                response.setCharacterEncoding("UTF-8");
-                objectMapper.writeValue(response.getWriter(), Map.of(
-                        "erro", "UserInactiveException",
-                        "mensagem", "Usuário inativo: " + user.getId(),
-                        "id", user.getId()));
-                return;
-            }
-
-
-            var auth = new UsernamePasswordAuthenticationToken(
-                    user.getId() , null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
-            SecurityContextHolder.getContext().setAuthentication(auth);
+        if (header == null || !header.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
+        DecodedJWT jwt;
+        try {
+            jwt = tokenService.validarToken(header.substring(7));
+        } catch (JWTVerificationException e) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        Long userId = jwt.getClaim("id").asLong();
+        Integer tokenVersion = jwt.getClaim("tv").asInt();
+        User user = userId == null ? null : userRepository.findById(userId).orElse(null);
+
+        // Papel e status vêm do banco. O token deixa de valer se a conta foi desativada
+        // ou se a versão foi invalidada (troca de senha, logout, mudança de papel ou e-mail).
+        if (user == null || !user.getActive() || tokenVersion == null || tokenVersion != user.getTokenVersion()) {
+            writeUnauthorized(response);
+            return;
+        }
+
+        var auth = new UsernamePasswordAuthenticationToken(
+                user.getId(),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getUserType().name())));
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
         filterChain.doFilter(request, response);
+    }
+
+    private void writeUnauthorized(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(),
+                new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Sessão inválida ou expirada.", Instant.now()));
     }
 }

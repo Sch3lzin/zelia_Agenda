@@ -2,6 +2,7 @@ package com.zelia.agenda.service;
 
 import com.zelia.agenda.domain.agenda.Agenda;
 import com.zelia.agenda.domain.agenda.AgendaRepository;
+import com.zelia.agenda.domain.agenda.ClassTime;
 import com.zelia.agenda.domain.agenda.Period;
 import com.zelia.agenda.domain.agenda.dto.AgendaResponse;
 import com.zelia.agenda.domain.agenda.dto.AgendaResponseList;
@@ -13,10 +14,12 @@ import com.zelia.agenda.domain.user.User;
 import com.zelia.agenda.domain.user.UserRepository;
 import com.zelia.agenda.exceptions.AgendaAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,10 +37,8 @@ public class AgendaService {
     }
 
     public Agenda getAgenda(Long id) {
-        Agenda agenda = agendaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario não encontrado: " + id));
-
-        return agenda;
+        return agendaRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado: " + id));
     }
 
     public AgendaResponseList getListAgendaDay(GetListDayDTO dto) {
@@ -61,12 +62,10 @@ public class AgendaService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuario não encontrado: " + id));
 
         SchoolClass schoolClass = schoolClassRepository.findById(dto.schoolClassId())
-                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada: " + dto.schoolClassId()));
 
         if (agendaRepository.existsByPeriodAndClassTimeAndDate(dto.period(), dto.classTime(), dto.date())) {
-            throw new AgendaAlreadyExistsException(
-                    "Já existe um agendamento para o período " + dto.period() +
-                    ", horário de aula " + dto.classTime() + " na data " + dto.date());
+            throw new AgendaAlreadyExistsException(conflitoMensagem(dto.period(), dto.classTime(), dto.date()));
         }
 
         Agenda agenda = new Agenda(
@@ -78,7 +77,12 @@ public class AgendaService {
                 dto.date()
         );
 
-        return agendaRepository.save(agenda);
+        try {
+            return agendaRepository.save(agenda);
+        } catch (DataIntegrityViolationException e) {
+            // Mesmo horário reservado por outra requisição entre a verificação e o insert.
+            throw new AgendaAlreadyExistsException(conflitoMensagem(dto.period(), dto.classTime(), dto.date()));
+        }
     }
 
     public Agenda updateAgenda(Long id, Long userId, CreateAgendaDTO dto, Authentication authentication) {
@@ -101,14 +105,16 @@ public class AgendaService {
                 .existsByPeriodAndClassTimeAndDateAndIdNot(dto.period(), dto.classTime(), dto.date(), id);
 
         if (conflito) {
-            throw new AgendaAlreadyExistsException(
-                    "Já existe um agendamento para o período " + dto.period() +
-                            ", horário de aula " + dto.classTime() + " na data " + dto.date());
+            throw new AgendaAlreadyExistsException(conflitoMensagem(dto.period(), dto.classTime(), dto.date()));
         }
 
         agenda.update(schoolClass, dto.observation(), dto.period(), dto.classTime(), dto.date());
 
-        return agendaRepository.save(agenda);
+        try {
+            return agendaRepository.save(agenda);
+        } catch (DataIntegrityViolationException e) {
+            throw new AgendaAlreadyExistsException(conflitoMensagem(dto.period(), dto.classTime(), dto.date()));
+        }
     }
 
     public void deleteAgenda(Long id, Long userId, Authentication authentication) {
@@ -125,5 +131,10 @@ public class AgendaService {
         }
 
         agendaRepository.delete(agenda);
+    }
+
+    private String conflitoMensagem(Period period, ClassTime classTime, LocalDate date) {
+        return "Já existe um agendamento para o período " + period +
+                ", horário de aula " + classTime + " na data " + date;
     }
 }

@@ -13,4 +13,6 @@ public interface AgendaRepository extends JpaRepository<Agenda, Long> {
     List<Agenda> findByDate(@NotNull LocalDate date);
 
     boolean existsByPeriodAndClassTimeAndDateAndIdNot(@NotNull Period period, @NotNull ClassTime classTime, @NotNull LocalDate date, Long id);
+
+    boolean existsBySchoolClassId(Long schoolClassId);
 }

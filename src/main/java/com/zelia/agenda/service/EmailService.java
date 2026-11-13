@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -19,21 +20,28 @@ public class EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
-    private static final String SENDER_ADDRESS = "agendazelia@email.com";
-    private static final String SENDER_NAME = "Agenda Zélia";
-    private static final String BASE_URL = "http://localhost:8080";
     private static final String PASSWORD_RESET_PATH = "/recuperar-conta";
 
     private final JavaMailSender mailSender;
+    private final String baseUrl;
+    private final String senderAddress;
+    private final String senderName;
 
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(JavaMailSender mailSender,
+                        @Value("${app.base-url}") String baseUrl,
+                        @Value("${spring.mail.username}") String senderAddress,
+                        @Value("${app.mail.from-name}") String senderName) {
         this.mailSender = mailSender;
+        this.baseUrl = baseUrl.replaceAll("/+$", "");
+        this.senderAddress = senderAddress;
+        this.senderName = senderName;
     }
 
     @Async
     public void sendPasswordResetEmail(String recipientEmail, String recipientName, String token) {
         String subject = "Aqui está seu link para alterar a senha";
-        String resetLink = BASE_URL + PASSWORD_RESET_PATH + "?codigo=" + token;
+        // O código vai no fragmento (#): não é enviado ao servidor nem gravado em logs de acesso.
+        String resetLink = baseUrl + PASSWORD_RESET_PATH + "#codigo=" + token;
 
         String htmlBody = buildPasswordResetHtml(recipientName, resetLink);
         String plainBody = buildPasswordResetText(recipientName, resetLink);
@@ -41,7 +49,7 @@ public class EmailService {
         try {
             sendMessage(recipientEmail, subject, plainBody, htmlBody);
         } catch (MessagingException | UnsupportedEncodingException | MailException e) {
-            log.error("Failed to send password reset email to {}", recipientEmail, e);
+            log.error("Falha ao enviar e-mail de recuperação de senha para {}", maskEmail(recipientEmail), e);
         }
     }
 
@@ -50,7 +58,7 @@ public class EmailService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
 
-        helper.setFrom(SENDER_ADDRESS, SENDER_NAME);
+        helper.setFrom(senderAddress, senderName);
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(plainBody, htmlBody);
@@ -118,8 +126,8 @@ public class EmailService {
               </table>
             </body>
             </html>
-            """.replace("[[NAME]]", safeName)
-                .replace("[[LINK]]", resetLink);
+            """.replace("[[LINK]]", HtmlUtils.htmlEscape(resetLink))
+                .replace("[[NAME]]", safeName);
     }
 
     private String buildPasswordResetText(String recipientName, String resetLink) {
@@ -134,7 +142,15 @@ public class EmailService {
             Se você não solicitou a alteração, ignore este e-mail.
 
             Obrigado,
-            Clínica Voll Med.
+            Grupo Escolar Zélia Milles.
             """.formatted(recipientName, resetLink);
+    }
+
+    static String maskEmail(String email) {
+        int at = email.indexOf('@');
+        if (at <= 1) {
+            return "***";
+        }
+        return email.charAt(0) + "***" + email.substring(at);
     }
 }
