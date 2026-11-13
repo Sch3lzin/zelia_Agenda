@@ -42,6 +42,10 @@ public class User {
     @Column(nullable = false)
     private Boolean active;
 
+    // Incrementado para invalidar todos os tokens JWT já emitidos para este usuário.
+    @Column(name = "token_version", nullable = false)
+    private int tokenVersion;
+
     public User(@NotBlank String name, @NotBlank String email, @Nullable String encode, @NotNull UserType userType, @Nullable Boolean active) {
         this.name = name;
         this.email = email;
@@ -55,5 +59,9 @@ public class User {
         this.email = email;
         this.userType = userType;
         return this;
+    }
+
+    public void invalidateTokens() {
+        this.tokenVersion++;
     }
 }
