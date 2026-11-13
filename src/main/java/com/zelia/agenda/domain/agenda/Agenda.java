@@ -3,6 +3,8 @@ package com.zelia.agenda.domain.agenda;
 import com.zelia.agenda.domain.schoolClass.SchoolClass;
 import com.zelia.agenda.domain.user.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -46,4 +48,13 @@ public class Agenda {
 
     @Column(nullable = false)
     private LocalDate date;
+
+    public Agenda(User user, SchoolClass schoolClass, @NotBlank String observaion, @NotNull Period period, @NotNull ClassTime classTime, @NotNull LocalDate date) {
+        this.user = user;
+        this.schoolClass = schoolClass;
+        this.observation = observaion;
+        this.period = period;
+        this.classTime = classTime;
+        this.date = date;
+    }
 }

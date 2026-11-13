@@ -22,11 +22,12 @@ public class TokenService {
         this.algorithm = Algorithm.HMAC256(secret);
     }
 
-    public String gerarToken(String email, String userType) {
+    public String gerarToken(Long id, String email, String userType) {
         Instant agora = Instant.now();
         return JWT.create()
                 .withIssuer(ISSUER)
                 .withSubject(email)
+                .withClaim("id", id)
                 .withClaim("role", userType)
                 .withIssuedAt(Date.from(agora))
                 .withExpiresAt(Date.from(agora.plus(2, ChronoUnit.HOURS)))

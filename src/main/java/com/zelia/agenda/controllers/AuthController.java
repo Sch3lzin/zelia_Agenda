@@ -41,7 +41,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email ou Senha invalidos");
         }
 
-        String token = tokenService.gerarToken(user.getEmail(), user.getUserType().name());
+        String token = tokenService.gerarToken(user.getId(), user.getEmail(), user.getUserType().name());
         return ResponseEntity.ok(new TokenResponse(token));
     }
 }
