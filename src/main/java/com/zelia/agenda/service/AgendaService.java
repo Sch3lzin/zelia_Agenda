@@ -72,7 +72,7 @@ public class AgendaService {
         Agenda agenda = new Agenda(
                 user,
                 schoolClass,
-                dto.observaion(),
+                dto.observation(),
                 dto.period(),
                 dto.classTime(),
                 dto.date()
@@ -106,11 +106,7 @@ public class AgendaService {
                             ", horário de aula " + dto.classTime() + " na data " + dto.date());
         }
 
-        agenda.setSchoolClass(schoolClass);
-        agenda.setObservation(dto.observaion());
-        agenda.setPeriod(dto.period());
-        agenda.setClassTime(dto.classTime());
-        agenda.setDate(dto.date());
+        agenda.update(schoolClass, dto.observation(), dto.period(), dto.classTime(), dto.date());
 
         return agendaRepository.save(agenda);
     }

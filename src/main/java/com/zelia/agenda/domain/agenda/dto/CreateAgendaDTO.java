@@ -6,5 +6,5 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
-public record CreateAgendaDTO(@NotNull Long schoolClassId, String observaion,@NotNull Period period,@NotNull ClassTime classTime,@NotNull LocalDate date) {
+public record CreateAgendaDTO(@NotNull Long schoolClassId, String observation, @NotNull Period period, @NotNull ClassTime classTime, @NotNull LocalDate date) {
 }

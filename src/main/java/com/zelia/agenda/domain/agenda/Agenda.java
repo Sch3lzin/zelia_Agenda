@@ -49,12 +49,21 @@ public class Agenda {
     @Column(nullable = false)
     private LocalDate date;
 
-    public Agenda(User user, SchoolClass schoolClass, @NotBlank String observaion, @NotNull Period period, @NotNull ClassTime classTime, @NotNull LocalDate date) {
+    public Agenda(User user, SchoolClass schoolClass, @NotBlank String observation, @NotNull Period period, @NotNull ClassTime classTime, @NotNull LocalDate date) {
         this.user = user;
         this.schoolClass = schoolClass;
-        this.observation = observaion;
+        this.observation = observation;
         this.period = period;
         this.classTime = classTime;
         this.date = date;
+    }
+
+    public Agenda update(SchoolClass schoolClass, String observation, @NotNull Period period, @NotNull ClassTime classTime, @NotNull LocalDate date) {
+        this.schoolClass = schoolClass;
+        this.observation = observation;
+        this.period = period;
+        this.classTime = classTime;
+        this.date = date;
+        return this;
     }
 }
