@@ -31,14 +31,14 @@ public class SchoolClassController {
         return ResponseEntity.ok(classes);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SECRETARIO')")
     @PostMapping
     public ResponseEntity<SchoolClassResponse> createClass(@RequestBody @Valid CreateClassDTO dto) {
         SchoolClass schoolClass = schoolClassService.createClass(dto);
         return ResponseEntity.ok(SchoolClassResponse.from(schoolClass));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SECRETARIO')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteClass(@PathVariable Long id) {
         schoolClassService.deleteClass(id);

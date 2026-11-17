@@ -30,7 +30,7 @@ public class UserController {
         this.rateLimiter = rateLimiter;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SECRETARIO')")
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = userService.getAllUsers()
@@ -41,7 +41,7 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @PreAuthorize("hasRole('ADMIN') or #id == principal")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SECRETARIO') or #id == principal")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
         User user = userService.getUser(id);
@@ -78,14 +78,14 @@ public class UserController {
         return ResponseEntity.ok(UserResponse.from(user));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SECRETARIO')")
     @PatchMapping("/reactive/{id}")
     public ResponseEntity<UserResponse> reactiveUser(@PathVariable Long id) {
         User user = userService.reactiveUser(id);
         return ResponseEntity.ok(UserResponse.from(user));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SECRETARIO')")
     @DeleteMapping("/{id}")
     public ResponseEntity<UserResponse> deactivateUser(@PathVariable Long id,
                                                        @AuthenticationPrincipal Long actorId) {
